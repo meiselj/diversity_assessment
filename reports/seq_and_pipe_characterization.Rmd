@@ -1,0 +1,26 @@
+---
+title: "Sequence data and pipeline characterization"
+author: "Nate Olson"
+date: "12/19/2017"
+output: pdf_document
+---
+
+```{r}
+## initiate project template
+```
+
+## Dataset Characterization - Figure 1
+* Figure 1A: Sequence quality - highlighting sequencing run differences 
+* Figure 1B: Reads per sample - relevant to normalization 
+
+## Pipeline characterization 
+
+* Table 1 (Or figure) 
+    * Number of features   
+    * Filter Rate - % of reads that fail quality control - insight into how pipelines deal with perceived PCR and sequencing artifacts   
+
+
+* Figure 2 
+    * Species abundance curves - relate to ecology literature, the species abundance curves are fundamentally different between pipelines, indicating that the features generated using represent different biological units and therefore should be interpreted as such (Only unmixed samples same PCR replicate across sequencing runs). 
+    * Rarefaction curves (Only unmixed samples same PCR replicate across sequencing runs)
+    * Prevalence (all samples)

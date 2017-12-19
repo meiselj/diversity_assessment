@@ -1,0 +1,12 @@
+---
+title: "beta_diversity"
+author: "Nate Olson"
+date: "12/19/2017"
+output: pdf_document
+---
+
+## Biological v. Technical variation 
+- boxplots comparing technical variability (PCR and sequencing runs) and biological variability for unmixed pre- and post-exposure. 
+
+##Comparison to expectation 
+- similarity between mixtures relative to unmixed sample similarity and differences in the proportion of prokaryotic DNA between the unmixed samples. 

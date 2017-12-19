@@ -1,0 +1,1 @@
+## Generate input data for abundance curve and prevalence

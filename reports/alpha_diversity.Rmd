@@ -1,0 +1,22 @@
+---
+title: "alpha_diversity"
+author: "Nate Olson"
+date: "12/19/2017"
+output: html_document
+---
+
+## Technical artifacts 
+- correlating richness estimates with sequencing depth and average read quality score 
+Expectation when PCR and sequencing artifacts are not appropriately handled richness and evenness metrics are positively correlated with depth and negatively correlated with read quality
+Figure - scatter plot with correlation or regression results
+
+## Assessment 
+To limit the number of comparisons - the following are only for pipeline, normalization and diversity metrics not correlated with read depth and quality  
+
+* biological v. technical variation for unmixed samples
+Figure -  boxplot, not sure how to incorporate uncertainty
+
+* Comparison to expectation - test whether alpha diversity is higher for the 50-50 mix compared to unmixed samples  - only for richness
+Expectation - individuals with greater dissimilarity between pre- and post-exposure samples with have greater increases in richess for mixed samples
+Figure - point and error bar plots
+Optional - Table with statistical test results for all pipeline and normalization methods
