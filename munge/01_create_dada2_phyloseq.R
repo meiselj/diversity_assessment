@@ -1,39 +1,43 @@
-### DADA2 Phyloseq Object
+### DADA2 Phyloseq Object 
+# Generate phlyoseq object using DADA2 pipeline results 
 require(Biostrings)
 
-seqtab <- readRDS("data/dada2/seqtab_nochim.rds")
-otu_tbl <- otu_table(seqtab, taxa_are_rows = FALSE)
+###################### Load DADA2 Pipeline Results #############################
 
-## Rep sequences
-sv_seqs <- colnames(otu_tbl)
-names(sv_seqs) <- paste0("SV",1:ncol(otu_tbl))
 
-## Rename features
-colnames(otu_tbl) <- paste0("SV",1:ncol(otu_tbl))
-
-## Taxa data
-taxa <- readRDS("data/dada2/taxa.rds")
-rownames(taxa) <- names(sv_seqs)[match(sv_seqs, rownames(taxa))]
-
-## Metadata
+## Metadata --------------------------------------------------------------------
+# mgtstMetadata loaded with project `ProjectTemplate::load.project()` 
+# tsv file with mgtstMetadata in `data` directory
 meta_df <-  column_to_rownames(mgtstMetadata, var = "sample_id")
 
-## Tree data 
+## Count Table -----------------------------------------------------------------
+otu_tbl <- readRDS("data/dada2/seqtab_nochim.rds") %>% 
+    otu_table(taxa_are_rows = FALSE)
+
+## Taxa data -------------------------------------------------------------------
+taxa <- readRDS("data/dada2/taxa.rds")
+
+## Rep sequences ---------------------------------------------------------------
+sv_seqs <- colnames(otu_tbl)
+
+## Rename features -------------------------------------------------------------
+colnames(otu_tbl) <- paste0("SV",1:ncol(otu_tbl))
+
+names(sv_seqs) <- paste0("SV",1:ncol(otu_tbl))
+
+rownames(taxa) <- names(sv_seqs)[match(sv_seqs, rownames(taxa))]
+
+
+###################### Create Phyloseq Object ##################################
+
+dada_ps <- phyloseq(otu_tbl, sample_data(meta_df), tax_table(taxa))
+
+## Define Tree Slot ------------------------------------------------------------
 tree_dat <- readRDS("data/dada2/dada_tree_GTR.rds")
-
-## Seq data 
-seq_dat <- readDNAStringSet("data/dada2/sv_seqs.fasta")
-
-## Create phyloseq object
-dada_ps <- phyloseq(otu_tbl,
-                    sample_data(meta_df),
-                    tax_table(taxa))
-
 phy_tree(dada_ps) <- tree_dat$tree
-dada_ps@refseq <- seq_dat
 
-## Removing 0 entry samples
-# dada_samples <- sample_names(dada_ps)
-# dada_nonzero_sample <- dada_samples[sample_sums(dada_ps) != 0]
-# dada_ps <- prune_samples(dada_nonzero_sample, dada_ps) 
+## Define Seq Slot -------------------------------------------------------------
+dada_ps@refseq <- DNAStringSet(sv_seqs)
+
+###################### Caching Phyloseq Object #################################
 ProjectTemplate::cache("dada_ps")
