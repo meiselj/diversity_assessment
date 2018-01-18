@@ -33,12 +33,12 @@ cluster_samples <- function(comp_df, dist_mat){
 #'
 #' @examples
 cluster_eval <- function(cluster_assignments, comp_df){
-    if (nrow(comp_df) != length(cluster_assignments)) {
-        comp_df <- filter(comp_df, sample_id %in% names(cluster_assignments))
-    }
-    
     if (is.null(cluster_assignments)) {
         return(NA)
+    }
+    
+    if (nrow(comp_df) != length(cluster_assignments)) {
+        comp_df <- filter(comp_df, sample_id %in% names(cluster_assignments))
     }
     
     ## Ensuring sample_ids are in the correct order
@@ -77,7 +77,7 @@ get_cluster_eval_df <- function(dist_obj, full_comp_df){
         mutate(cluster_results = map2_dbl(cluster_assignments, comp_df, cluster_eval))
 }
 
-######################## Generating Comparison data frame ######################
+######################## Generating Comparison Data Frame ######################
 condensed_meta <- mgtstMetadata %>% 
     filter(biosample_id != "NTC") %>% 
     mutate(sample_id = as.character(sample_id)) %>% 
@@ -101,7 +101,8 @@ full_comp_df <- comparison_meta %>%
 ## Perform cluster evaluation 
 full_cluster_eval_df <- unweighted_beta_df %>% 
     gather("metric","dist_output", -pipe, -method) %>% 
-    mutate(dist_obj = map(dist_output, pluck, "result"))
+    mutate(dist_obj = map(dist_output, pluck, "result")) %>% 
+    filter(!is.null(dist_obj)) %>% 
     mutate(eval_results = map(dist_obj, get_cluster_eval_df, full_comp_df))
 
 ## Tidy cluster evaluation results
@@ -115,15 +116,21 @@ ProjectTemplate::cache("beta_cluster_eval_unweighted_df")
 
 ######################## Weighted Metric Evaluation ########################## 
 
+## Safe eval version - need to check error after updating source data  
+safe_get_cluster <- safely(get_cluster_eval_df)
+
 ## Perform cluster evaluation 
 full_cluster_eval_df <- weighted_beta_df %>% 
     gather("metric","dist_output", -pipe, -method) %>% 
-    mutate(dist_obj = map(dist_output, pluck, "result"))
-    mutate(eval_results = map(dist_obj, get_cluster_eval_df, full_comp_df))
+    mutate(dist_obj = map(dist_output, pluck, "result")) %>% 
+    mutate(eval_output = map(dist_obj, safe_get_cluster, full_comp_df)) %>% 
+    mutate(eval_results = map(eval_output, pluck, "result"))
 
 ## Tidy cluster evaluation results
 beta_cluster_eval_weighted_df <- full_cluster_eval_df %>% 
-    select(-dist_obj, -dist_output) %>% 
+    mutate(eval_error = map_lgl(eval_results, is.null)) %>% 
+    filter(!eval_error) %>% 
+    select(-dist_obj, -dist_output, -eval_output) %>% 
     unnest() %>% 
     select(-comp_df, -cluster_assignments)   
 
