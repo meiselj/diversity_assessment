@@ -10,7 +10,7 @@ apply_rare_methods_ps <- function(ps){
     ps@refseq <- NULL 
     
     ## Defining rarifying levels
-    rare_levels <- list(rare_2K = 200, rare_5K = 500, rare_10K = 1000)
+    rare_levels <- list(rare_2K = 2000, rare_5K = 5000, rare_10K = 10000)
     
     rare_ps <- rare_levels %>% 
         map(~rarefy_even_depth(ps, rngseed = 531, sample.size = .))
@@ -102,7 +102,7 @@ remove_ntc <- function(ps){
 remove_no_read_samples <- function(ps) prune_samples(sample_sums(ps) > 0,  ps)
 
 ## List of phyoseq objects from different pipelines being evaluated
-ps_list <- list(dada = dada_ps, mothur = mothur_ps, qiimeOpenRef = dada_ps) 
+ps_list <- list(dada = dada_ps, mothur = mothur_ps, qiimeOpenRef = qiime_open_ref_ps) 
 
 ## Removing NTC and samples with no counts
 ps_no_ntc_list <- ps_list %>% map(remove_ntc) %>% map(remove_no_read_samples)
