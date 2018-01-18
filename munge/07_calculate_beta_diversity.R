@@ -1,8 +1,8 @@
 ## Calculating Beta Diversity Metrics for Normalized count data
 
 ## Requirements for parallelizing distance calculations
-# require(doParallel) 
-# registerDoParallel(cores = 7)
+require(doParallel)
+registerDoParallel(cores = 7)
 
 ## Safely calculate distance metrics Instead of stopping when there is an error
 ## when calculating the distance metric provides NULL results with error message
@@ -40,7 +40,7 @@ norm_df <- transpose(normalized_ps_list) %>%
     gather(key = "method",value = "ps_obj", -pipe) %>%
     bind_rows(rare_df)
 
-##  Calculating Weighted Metrics -----------------------------------------------
+##  Calculating weighted metrics -----------------------------------------------
 weighted_beta_df <- norm_df %>%
     mutate(wunifrac_dist = map(ps_obj,  safe_unifrac, 
                                ## UniFrac parameters
