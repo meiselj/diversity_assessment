@@ -102,7 +102,11 @@ remove_ntc <- function(ps){
 remove_no_read_samples <- function(ps) prune_samples(sample_sums(ps) > 0,  ps)
 
 ## List of phyoseq objects from different pipelines being evaluated
-ps_list <- list(dada = dada_ps, mothur = mothur_ps, qiimeOpenRef = qiime_open_ref_ps) 
+ps_list <- list(dada = dada_ps, 
+                mothur = mothur_ps, 
+                qiimeOpenRef = qiime_open_ref_ps,
+                qiimeClosedRef = qiime_closed_ref_ps,
+                qiimeDeNovo = qiime_de_novo_ps) 
 
 ## Removing NTC and samples with no counts
 ps_no_ntc_list <- ps_list %>% map(remove_ntc) %>% map(remove_no_read_samples)
