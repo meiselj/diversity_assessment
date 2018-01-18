@@ -1,0 +1,47 @@
+---
+title: "Methods"
+author: "Nate Olson"
+date: "1/18/2018"
+output: pdf_document
+---
+
+## Methods
+- data set  
+    - mixtures from Olson et al. in-prep 
+    - four sequencing runs 
+        - libraries prepared at independent laboratories using the same protocol (ILLUMINA) with the sample 16S PCR as input. 
+        - libraries were sequenced twice at each laboratory. 
+    - For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was recalibrated before the second run resulting in improved quality scores. 
+    - For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was reoptimized for resulting in increased throughput and lower sample to sample read count variability. 
+- pipelines  
+    - The sequence data was processed using 6 bioinformatic pipelines
+        - Mothur de novo 
+        - DADA2 sequence inference  
+        - QIIME - the following pipelines all used the sample input merged paired-end, quality filtered set of sequences.
+            - open reference 
+            - closed reference  
+            - de novo 
+            - deblur - sequence inference 
+- data characterization  
+    - Seq data characterization - R packages for calculating summary values
+- normalization 
+    - Samples were rareified to four level, 2000, 5000, and 10000 total abundance per sample, and to the total abundance of the 15th percentile. 
+    - Rarefaction levels were selected based on values commonly used in published studies (EMP 10000), other comparison studies (Weiss et al 2017), and McMurdie and Holmes 2014. 
+    - Rareified count data was analyzed using both weighted and unweighted metrics. 
+    - Other normalization methods only analyzed for weighted metrics as these methods would not impact unweighted metric results. 
+        - CSS (Paulson et al. 2013), TSS (proportions), UQ (upperquartile, edgeR), TMM (edgeR), and RLE (edgeR)
+- beta diversity metrics  
+    - Weighted and unweighted phylogenetic and feature (not sure appropriate term) metrics were compared. 
+    - metrics calculated using phyloseq version XYZ
+    - weighted and unweighted unifrac,implentation of FastUniFrac (phylseq ref, FastUnifrac ref).  
+    - Bray curtis  
+    - Jacarrd 
+- assessment 
+    - technical artifacts  
+    - biological v. technical variability   
+        - Compared distribution of beta diversity dissimilarity metrics between individuals, within individual between conditions (pre- and post-exposure) and different types of technical replicates
+    - comparison to expectation 
+        - Evaluated the ability to differentiate titrations from pre-exposure samples based on partitioning around medoiods (Reynold et al. and McMurdie and Holmes 2014). 
+        
+__References__    
+Reynolds, A., Richards, G., de la Iglesia, B. and Rayward-Smith, V. (1992) Clustering rules: A comparison of partitioning and hierarchical clustering algorithms; Journal of Mathematical Modelling and Algorithms 5, 475–504 (http://dx.doi.org/10.1007/s10852-005-9022-1).
