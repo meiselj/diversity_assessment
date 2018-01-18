@@ -49,4 +49,5 @@ tree_dat <- read.tree(tree_file)
 ## Defining tree slot
 phy_tree(qiime_open_ref_ps) <- tree_dat
 
+###################### Caching Phyloseq Object #################################
 ProjectTemplate::cache("qiime_open_ref_ps")
