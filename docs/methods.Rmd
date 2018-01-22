@@ -13,51 +13,54 @@ output: pdf_document
         - libraries were sequenced twice at each laboratory. 
     - For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was recalibrated before the second run resulting in improved quality scores. 
     - For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was reoptimized for resulting in increased throughput and lower sample to sample read count variability.  
+- Seq data characterization - R packages for calculating summary values 
+    - SAVR - illumina quality control output 
+    - RQC
 
 ## Bioinformatic Pipelines  
-The data from the four sequencing runs was processed using 6 bioinformatic pipelines. 
-The QIIME open reference, closed reference, de novo, and deblur pipelines, as well as the Mothur de novo and DADA2 sequence inference pipelines. 
+Data from the four sequencing runs was processed using 6 bioinformatic pipelines including the QIIME open reference, closed reference, de novo, and deblur pipelines, as well as the Mothur de novo and DADA2 sequence inference pipelines. 
 Code used to run the bioinformatic pipelines is available at https://github.com/nate-d-olson/mgtst_pipelines/, on the multirun branch. 
-The mothur pipeline uses the OptiClust algorithm for de novo clustering. Preprocessing includes mapping sequences to the SILVA reference alignment and excluding sequences that do not align to the reference alignment (Mothur ref). 
-Mothur version 1.39.3 (https://www.mothur.org) and SILVA release version 119 reference alignment and RDP the mothur formatted version of the RDP 16S rRNA database release version 10. 
-Taxonomic classification was performed using the mothur implentation of the RDP bayesian classifier (REF). 
-THe phylogenetic tree was constructed in mothur using the clearcut algorithm (REF). 
-The DADA2 big data protocol for DADA2 versions 1.4 or later was followed (https://benjjneb.github.io/dada2/bigdata.html), except for read length trimming primer trimming. 
-The forward and reverse reads were timmed to 260 and 200 bp respectively, using the protocol values resulted in total abundance values around 5000. 
+The Mothur pipeline uses the OptiClust algorithm for de novo clustering (OptiClust ref). 
+Preprocessing includes merging and quality filtering paired-end reads followed by aligning sequences to the SILVA reference alignment (Mothur ref). 
+Taxonomic classification was performed using the Mothur implentation of the RDP bayesian classifier (REF). 
+The phylogenetic tree was constructed in Mothur using the clearcut algorithm (REF). 
+Mothur version 1.39.3 (https://www.mothur.org) and SILVA release version 119 reference alignment and RDP the mothur formatted version of the RDP 16S rRNA database release version 10 (RDP Ref). 
+
+The DADA2 big data protocol for DADA2 versions 1.4 or later was followed (https://benjjneb.github.io/dada2/bigdata.html), except for read length trimming parameters and primer trimming. 
+The forward and reverse reads were timmed to 260 and 200 bp respectively.  Using the values from the online protocol resulted in total abundance values around 5000. 
 Forward and reverse primers were trimmed using cutadapt version 1.14 (https://cutadapt.readthedocs.io/en/stable/).
-DADA2 version 1.6.0 (DADA2 package REF) and reference database info. 
+DADA2 version 1.6.0 \@ref[callahan2016DADA2] and reference database info. 
 Taxonomic classification was performed using the DADA2 implementation of the RDP bayesian classifier (REF). 
-The phylogenetic tree was generated following methods in (F1000 Callahan ref.). 
-For the QIIME pipelines all used the same input merged paired-end, quality filtered set of sequences (REF). 
-Both open and closed reference pipeline used the Greengenes 97% similiarty database for reference clustering. 
-UCLUST alogrithm (version v1.2.22q) was used for clustering and taxonomic assignment against the Greengenes database version 13.8 97\% similarity OTUs (REF). 
-Additionally, sequence variants were inferred from the QIIME merged and quality filtered sequences using the Deblur sequence inference clustering method (version 1.0.3). 
+The phylogenetic tree was generated following methods in \@ref[callahan2016]  using the DECIPHER R package version for multiple sequence alignment \@ref[DECIPHER] and the phangorn R package for tree construction \@ref[phangorn]. 
+For the QIIME pipelines all used the same input merged paired-end, quality filtered set of sequences \@ref[Caporaso2010]. 
+Both open and closed reference pipelines used the Greengenes 97\% similiarity database for reference clustering. 
+UCLUST alogrithm (version v1.2.22q) was used for clustering and taxonomic assignment against the Greengenes database version 13.8 97\% similarity OTUs . 
+THe phylogenetic tree was constructed using FastTree and a multiple sequence alignment generated using pyNAST and the Greengenes reference alignment (pyNAST REF, Greengenes info, FastTree). 
+Additionally, sequence variants were inferred from the QIIME merged and quality filtered sequences using the Deblur sequence inference clustering method (version 1.0.3) (DEBLUR ref). 
 The same taxonomic classification and phylogenetic tree construction methods used for the other QIIME pipelines were also used for the Deblur clustered sequence data. 
 
-- data characterization  
-    - Seq data characterization - R packages for calculating summary values 
+## Normalization Methods and Beta-Diversity Metrics
+Normalization methods are used to account for differences in sampling depth, number of sequences generated per sample, across samples. 
+Rarefaction, subsampling counts without replacement to an even abundance is a commonly used method in macro-ecology and 16S rRNA marker-gene surveys (REF). 
+Samples were rarified to four level; 2000, 5000, and 10000 total abundance per sample, and to the total abundance of the 15th percentile. 
+Rarefaction levels were selected based on values commonly used in published studies (EMP 10000), other comparison studies (Weiss et al 2017), and McMurdie and Holmes 2014. 
+Rarified count data was analyzed using both weighted and unweighted Beta-diversity metrics. 
+Other normalization methods were only analyzed for weighted metrics as these methods would not impact unweighted metric results. 
+Other normalization methods include thoes previously developed for normalizing microarray and RNAseq data that are commonly used to normalize 16S rRNA marker-gene survey including UQ (upperquartile, edgeR), TMM (edgeR), and RLE (edgeR). 
+Cummulative sum scaling (CSS) (Paulson et al. 2013) a normalization method developed specifically for 16S rRNA marker-gene survey data and total sum scaling (proportions, TSS) were also included in our weighted Beta-diversity metric assessment. 
 
-- normalization 
-    - Samples were rareified to four level, 2000, 5000, and 10000 total abundance per sample, and to the total abundance of the 15th percentile. 
-    - Rarefaction levels were selected based on values commonly used in published studies (EMP 10000), other comparison studies (Weiss et al 2017), and McMurdie and Holmes 2014. 
-    - Rareified count data was analyzed using both weighted and unweighted metrics. 
-    - Other normalization methods only analyzed for weighted metrics as these methods would not impact unweighted metric results. 
-        - CSS (Paulson et al. 2013), TSS (proportions), UQ (upperquartile, edgeR), TMM (edgeR), and RLE (edgeR)
-
-- beta diversity metrics  
-    - Weighted and unweighted phylogenetic and feature (not sure appropriate term) metrics were compared. 
-    - metrics calculated using phyloseq version XYZ
-    - weighted and unweighted unifrac,implentation of FastUniFrac (phylseq ref, FastUnifrac ref).  
-    - Bray curtis  
-    - Jacarrd  
+Weighted and unweighted phylogenetic and feature (not sure appropriate term) metrics were compared. 
+Beta diversity metrics were calculated using phyloseq version 1.22.3 \@ref[phyloseq].
+Weighted and Unweighted UniFrac phylogenetic Beta-diversity metrics were calculated using the phyloseq implementation of FastUniFrac (phylseq ref, FastUnifrac ref). 
+For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jaccard unweighted metrics were used. 
  
-- assessment 
-    - technical artifacts  
-    - biological v. technical variability   
-        - Compared distribution of beta diversity dissimilarity metrics between individuals, within individual between conditions (pre- and post-exposure) and different types of technical replicates.
-    - comparison to expectation 
-        - Evaluated the ability to differentiate titrations from pre-exposure samples based on partitioning around medoiods (Reynold et al. and McMurdie and Holmes 2014). 
-        
+## Beta-Diversity Assessment 
+- technical artifacts  
+- Biological v. technical variability   
+    - Compared distribution of beta diversity dissimilarity metrics between individuals, within individual between conditions (pre- and post-exposure) and different types of technical replicates.
+We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in (Reynold et al. and McMurdie and Holmes 2014). 
+This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples. 
+
 __References__    
 Reynolds, A., Richards, G., de la Iglesia, B. and Rayward-Smith, V. (1992) Clustering rules: A comparison of partitioning and hierarchical clustering algorithms; Journal of Mathematical Modelling and Algorithms 5, 475–504 (http://dx.doi.org/10.1007/s10852-005-9022-1).
 
