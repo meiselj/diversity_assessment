@@ -49,7 +49,7 @@ Other normalization methods were only analyzed for weighted metrics as these met
 Other normalization methods include thoes previously developed for normalizing microarray and RNAseq data that are commonly used to normalize 16S rRNA marker-gene survey including UQ (upperquartile, edgeR), TMM (edgeR), and RLE (edgeR). 
 Cummulative sum scaling (CSS) (Paulson et al. 2013) a normalization method developed specifically for 16S rRNA marker-gene survey data and total sum scaling (proportions, TSS) were also included in our weighted Beta-diversity metric assessment. 
 
-Weighted and unweighted phylogenetic and feature (not sure appropriate term) metrics were compared. 
+Weighted and unweighted phylogenetic and taxonomic beta diversity metrics were compared. 
 Beta diversity metrics were calculated using phyloseq version 1.22.3 \@ref[phyloseq].
 Weighted and Unweighted UniFrac phylogenetic Beta-diversity metrics were calculated using the phyloseq implementation of FastUniFrac (phylseq ref, FastUnifrac ref). 
 For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jaccard unweighted metrics were used. 
