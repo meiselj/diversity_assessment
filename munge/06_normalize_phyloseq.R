@@ -5,36 +5,54 @@
 ## 5000 in most analysis
 ## Weiss et al 2017? compared 2000, 5000, and 10000
 ## McMurdie and Holmes 2014 used the 15th percentile library size
-apply_rare_methods_ps <- function(ps){
-    ## Dropping refseq: reduce memory requirements, data not needed for analysis
-    ps@refseq <- NULL 
-    
-    ## Defining rarifying levels
-    rare_levels <- list(rare_2K = 2000, rare_5K = 5000, rare_10K = 10000)
-    
-    rare_ps <- rare_levels %>% 
-        map(~rarefy_even_depth(ps, rngseed = 531, sample.size = .))
-    
-    ## Rarefying at 15th percentile library size
-    q15 <- floor(quantile(sample_sums(ps), 0.15, na.rm = TRUE))
-    rare_ps$rare_15P <- rarefy_even_depth(ps, rngseed = 531, sample.size = q15)
-    
-    ## Returns list of rarifyed phyloseq objects
-    rare_ps
+rarefy_counts <- function(rare_level, ps, pipe){
+
+    rare_file <- file.path("munge", "norm_data", paste0(pipe,"_rare", rare_level, ".rds"))
+    ## Skipping if phyloseq object already rarified
+    if (file.exists(rare_file)) return("")
+
+    if (rare_level == "q15") {
+        rare_level <- q15 <- floor(quantile(sample_sums(ps), 0.15, na.rm = TRUE))
+    }
+
+    rare_ps <- rarefy_even_depth(ps, rngseed = 531, sample.size = rare_level)
+
+    ## Saving rarified phyloseq object as RDS
+    saveRDS(rare_ps, rare_file)
 }
 
+apply_rare_methods_ps <- function(ps_list){
+    ps <- ps_list$ps
+    pipe <- ps_list$pipe
+
+    ## Dropping refseq: reduce memory requirements, data not needed for analysis
+    ps@refseq <- NULL
+
+    ## Defining rarifying levels
+    rare_levels <- list(rare_2K = 2000, rare_5K = 5000,
+                        rare_10K = 10000, rare_q15 = "q15")
+
+    ## rarifying phyloseq objects and saving output to file
+    rare_levels %>% walk(rarefy_counts, ps, pipe)
+}
+
+
+
 ################# Normalization ################################################
-normalize_counts <- function(method, ps) {
+normalize_counts <- function(method, ps, pipe) {
     if (class(ps) != "phyloseq") {
         stop("ps not a phyloseq object")
     }
-    
+
+    norm_file <- file.path("munge", "norm_data", paste0(pipe,"_",method, ".rds"))
+    if (file.exists(norm_file)) return(readRDS(norm_file))
+
     print(paste("Normalizing count using method", method))
-    
+
     require(matrixStats)
     ## Extract count matrix from phyloseq object
     count_mat <- as(otu_table(ps), "matrix")
-    
+
     ## extract normalizaed counts
     if (method == "RAW") {
         ## Raw counts no normalization applied
@@ -59,25 +77,28 @@ normalize_counts <- function(method, ps) {
     } else {
         warning("Normalization method not defined")
     }
-    
+
     ## Normalizing counts
     norm_mat <- sweep(count_mat, 2, norm_factors,'/')
-    if ( sum(row.names(norm_mat) == taxa_names(ps)) == length(taxa_names(ps))) { 
+    if ( sum(row.names(norm_mat) == taxa_names(ps)) == length(taxa_names(ps))) {
         norm_tbl <- otu_table(norm_mat, taxa_are_rows = TRUE)
     } else if ( sum(colnames(norm_mat) == taxa_names(ps)) == length(taxa_names(ps))) {
         norm_tbl <- otu_table(norm_mat, taxa_are_rows = FALSE)
     } else {
         stop("taxa_names to not match row or column names")
     }
-    
-    
-    ## Returning phyloseq object with normalized counts 
-    ## Note: refseq data not included in returned phyloseq object 
-    phyloseq(norm_tbl, sample_data(ps), tax_table(ps), phy_tree(ps))
-    
+
+
+    ## Returning phyloseq object with normalized counts
+    ## Note: refseq data not included in returned phyloseq object
+    norm_ps <- phyloseq(norm_tbl, sample_data(ps), tax_table(ps), phy_tree(ps))
+
+    ## Saving normalized ps as RDS to prevent having to rerun
+    saveRDS(norm_ps, norm_file)
+
 }
 
-apply_norm_methods_ps <- function(ps){
+apply_norm_methods_ps <- function(ps_list){
     ## Normalizing counts using different methods/ normlization factors
     norm_methods <- list(RAW = "RAW", ## No normalization
                          RLE = "RLE", ## EdgeR - relative log expression
@@ -85,16 +106,15 @@ apply_norm_methods_ps <- function(ps){
                          UQ = "UQ",   ## EdgeR - upperquartile
                          CSS = "CSS", ## metagenomeSeq - cumulative sum scaling, with p = 0.75
                          TSS = "TSS") ## Total sum scaling (proportions)
-    
-    map(norm_methods, normalize_counts,ps) 
+    map(norm_methods, normalize_counts, ps = ps_list$ps, pipe = ps_list$pipe)
 }
 
 
 
 ## Removing no template controls
 remove_ntc <- function(ps){
-    non_ntc_samples <- sample_data(ps)$biosample_id != "NTC" 
-    
+    non_ntc_samples <- sample_data(ps)$biosample_id != "NTC"
+
     prune_samples(non_ntc_samples, ps)
 }
 
@@ -102,25 +122,22 @@ remove_ntc <- function(ps){
 remove_no_read_samples <- function(ps) prune_samples(sample_sums(ps) > 0,  ps)
 
 ## List of phyoseq objects from different pipelines being evaluated
-ps_list <- list(dada = dada_ps, 
-                mothur = mothur_ps, 
-                qiimeOpenRef = qiime_open_ref_ps,
-                qiimeClosedRef = qiime_closed_ref_ps,
-                qiimeDeNovo = qiime_de_novo_ps) 
+ps_files <- list.file("data/phyloseq_objects")
+ps_names <- basenames(ps_files) %>% str_replace("_ps.rds","")
+ps_list <- ps_files %>% set_names(ps_names) %>% map(readRDS)
 
 ## Removing NTC and samples with no counts
 ps_no_ntc_list <- ps_list %>% map(remove_ntc) %>% map(remove_no_read_samples)
 
-####################### Caching Normalized Count Data ##########################
-## cache objects are nested list with 
-##  - different pipeline phyloseq objects as the first level,
-##  - and normalization methods as the second level normalization
-## 
-## methods split into two objects as only rareified counts are used to evaluate
-## unweighted metrics
+## Creating a list with pipeline name and phyloseq objects
+pipe_names <- as.list(names(ps_no_ntc_list)) %>% set_names()
+ps_no_ntc_list <- list(pipe = pipe_names, ps = ps_no_ntc_list) %>% transpose()
 
-## Caching list of phyloseq objects with rarified counts  
-ProjectTemplate::cache("rarified_ps_list",{map(ps_no_ntc_list, apply_rare_methods_ps)})
+####################### Saving Normalized Count Data ###########################
+## rds files contain phyloseq objects with noramalized counts and no seq data
 
-## Caching list of phyloseq objects with normalized counts
-ProjectTemplate::cache("normalized_ps_list",{map(ps_no_ntc_list, apply_norm_methods_ps)})
+## Rarifying counts
+walk(ps_no_ntc_list, apply_rare_methods_ps)
+
+## Numeric normalization
+walk(ps_no_ntc_list, apply_norm_methods_ps)
