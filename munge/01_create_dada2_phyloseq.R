@@ -1,17 +1,17 @@
-### DADA2 Phyloseq Object 
-# Generate phlyoseq object using DADA2 pipeline results 
+### DADA2 Phyloseq Object
+# Generate phlyoseq object using DADA2 pipeline results
 require(Biostrings)
 
 ###################### Load DADA2 Pipeline Results #############################
 
 
 ## Metadata --------------------------------------------------------------------
-# mgtstMetadata loaded with project `ProjectTemplate::load.project()` 
+# mgtstMetadata loaded with project `ProjectTemplate::load.project()`
 # tsv file with mgtstMetadata in `data` directory
 meta_df <-  column_to_rownames(mgtstMetadata, var = "sample_id")
 
 ## Count Table -----------------------------------------------------------------
-otu_tbl <- readRDS("data/dada2/seqtab_nochim.rds") %>% 
+otu_tbl <- readRDS("data/dada2/seqtab_nochim.rds") %>%
     otu_table(taxa_are_rows = FALSE)
 
 ## Taxa data -------------------------------------------------------------------
@@ -33,11 +33,13 @@ rownames(taxa) <- names(sv_seqs)[match(sv_seqs, rownames(taxa))]
 dada_ps <- phyloseq(otu_tbl, sample_data(meta_df), tax_table(taxa))
 
 ## Define Tree Slot ------------------------------------------------------------
-tree_dat <- readRDS("data/dada2/dada_tree_GTR.rds")
+# tree_dat <- readRDS("data/dada2/dada_tree_GTR.rds")
+## Will need to update with final tree
+tree_dat <- readRDS("data/dada2/tree_fit.rds")
 phy_tree(dada_ps) <- tree_dat$tree
 
 ## Define Seq Slot -------------------------------------------------------------
-dada_ps@refseq <- DNAStringSet(sv_seqs)
+dada_ps@refseq <- Biostrings::DNAStringSet(sv_seqs)
 
-###################### Caching Phyloseq Object #################################
-ProjectTemplate::cache("dada_ps")
+###################### Saving Phyloseq Object ##################################
+saveRDS(dada_ps, "data/phyloseq_objects/dada_ps.rds")

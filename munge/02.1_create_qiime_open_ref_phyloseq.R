@@ -1,16 +1,16 @@
-### QIIME  
+### QIIME
 require(Biostrings)
 require(ape)
 
 #### QIIME Phyloseq Object
 
-## Issue loading biom file convert to json using biom convert 
+## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i otu_table_mc2_w_tax_no_pynast_failures.biom \
 ##              -o otu_table_mc2_w_tax_no_pynast_failures_json.biom \
 ##              --table-type "OTU table" --to-json
 ## ```
-qiime_dir <- "data/qiime_open_ref" 
+qiime_dir <- "data/qiime_open_ref"
 biom_file <- file.path(qiime_dir, "otu_table_mc2_w_tax_no_pynast_failures_json.biom")
 seq_file <- file.path(qiime_dir, "rep_set.fna")
 tree_file <- file.path(qiime_dir, "rep_set.tre")
@@ -18,9 +18,9 @@ tree_file <- file.path(qiime_dir, "rep_set.tre")
 qiime_open_ref_ps <- import_biom(BIOMfilename = biom_file)
 
 ## Update sample names to match metadata formated sample names
-sample_names(qiime_open_ref_ps) <- sample_names(qiime_open_ref_ps) %>%  
-    str_replace("^N","nist_run") %>% 
-    str_replace("^J", "jhu_run") %>% 
+sample_names(qiime_open_ref_ps) <- sample_names(qiime_open_ref_ps) %>%
+    str_replace("^N","nist_run") %>%
+    str_replace("^J", "jhu_run") %>%
     str_replace("(?<=[:digit:])-(?=[:digit:])","_")
 
 
@@ -49,5 +49,5 @@ tree_dat <- read.tree(tree_file)
 ## Defining tree slot
 phy_tree(qiime_open_ref_ps) <- tree_dat
 
-###################### Caching Phyloseq Object #################################
-ProjectTemplate::cache("qiime_open_ref_ps")
+###################### Saving Phyloseq Object ##################################
+saveRDS(qiime_open_ref_ps, "data/phyloseq_objects/qiimeOpenRef_ps.rds")

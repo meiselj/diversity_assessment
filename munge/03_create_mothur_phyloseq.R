@@ -3,7 +3,7 @@ require(ape)
 require(Biostrings)
 
 ############################## Define Mothur Files #############################
-## Defines file names and checks if the files exists  
+## Defines file names and checks if the files exists
 
 file_basename <- paste0("mgtst.trim.contigs.good.unique.good.filter.",
                         "unique.precluster.pick.opti_mcc.unique_list.")
@@ -27,18 +27,18 @@ if (!file.exists(seq_file)) stop("File not found - ", seq_file)
 
 
 
-######################### Renaming OTUs ######################################## 
+######################### Renaming OTUs ########################################
 #  ids for seq and tree files do not match shared and tax file
-otu_id_dat <- read_lines(rep_fasta) %>% 
+otu_id_dat <- read_lines(rep_fasta) %>%
     ## Only need read names
-    {.[grepl("^>",x = .)]} %>% 
+    {.[grepl("^>",x = .)]} %>%
     ## Excluding information after first '|'
     str_replace("\\|.*", "")
-    
 
-## Generating a data frame with the representative sequence ids and otu ids 
-otu_id_df <- data_frame(ids = otu_id_dat) %>% 
-    separate(ids, c("seq_id","otu_id"), "\t") %>% 
+
+## Generating a data frame with the representative sequence ids and otu ids
+otu_id_df <- data_frame(ids = otu_id_dat) %>%
+    separate(ids, c("seq_id","otu_id"), "\t") %>%
     mutate(seq_id = str_replace(seq_id, ">",""))
 
 ## Tree data -------------------------------------------------------------------
@@ -58,7 +58,7 @@ mothur_ps <- import_mothur(mothur_shared_file = shared_file,
 
 ## Adding sample metadata ------------------------------------------------------
 ## Modifying sample names for consistency
-sample_names(mothur_ps) <- sample_names(mothur_ps) %>% 
+sample_names(mothur_ps) <- sample_names(mothur_ps) %>%
     str_replace("(?<=[:digit:])_(?=[:LETTER:])","-")
 
 ## Defining metadata slot ------------------------------------------------------
@@ -70,5 +70,5 @@ phy_tree(mothur_ps) <- tree_dat
 ## Defining refseq slot --------------------------------------------------------
 mothur_ps@refseq <- seq_dat
 
-###################### Caching Phyloseq Object #################################
-ProjectTemplate::cache("mothur_ps")
+###################### Saving Phyloseq Object ##################################
+saveRDS(qiime_mothur_ps, "data/phyloseq_objects/mothur_ps.rds")
